@@ -7,20 +7,84 @@
 #include <stdbool.h>
 #include <string.h>
 #include <time.h>
+#include <pthread.h>
 #include "types.h"
 #include "const.h"
 #include "util.h"
+
+void swap(UINT* A, int a, int z){
+	int temp = A[a];
+	A[a] = A[z];
+	A[z] = temp; 
+}
 
 // TODO: implement
 int quicksort(UINT* A, int lo, int hi) {
     return 0;
 }
-
 // TODO: implement
-int parallel_quicksort(UINT* A, int lo, int hi) {
-    return 0;
+struct internalUse
+{
+    UINT* A;
+    int lo;
+    int hi;
+    int d;
+};
+
+
+
+int partition(UINT* A, int lo, int hi, int pi) {
+	
+    int pVal = A[pi];
+    swap(A, pi, hi);
+    int aux = lo;
+    for (int i=lo ; i<hi ; i++)
+    {
+        if(A[i]<= pVal)
+        {
+            swap(A, i, aux);
+            aux++;
+        }
+    }
+    swap(A, aux, hi);
+    return aux;
 }
 
+void parallel_quicksort(UINT* A, int lo, int hi, int d);
+
+void* q_thread(void *init)
+{
+    struct internalUse *start = init;
+    parallel_quicksort(start -> A, start -> lo, start -> hi, start -> d);
+    return NULL;
+}    
+
+void parallel_quicksort(UINT* A, int lo, int hi, int d) {
+    
+    if (lo < hi)
+    {
+        int pi = lo + (hi - lo)/2;
+        pi= partition(A, lo, hi, pi);
+        if (d> 0)
+        {
+	    struct internalUse arg = {A, lo, pi-1, d};
+            pthread_t thread;
+            int ret = pthread_create(&thread, NULL, q_thread, &arg);
+            if(ret == 0)
+		{
+ 			printf("Thread creating error\n");
+		}
+            parallel_quicksort(A, pi+1, hi, d);
+            pthread_join(thread, NULL);
+        }
+        else
+        {
+            quicksort(A, lo, pi-1);
+            quicksort(A, pi+1, hi);
+        }
+     }
+}
+// Internal endmark
 int main(int argc, char** argv) {
     printf("[quicksort] Starting up...\n");
 
@@ -29,8 +93,54 @@ int main(int argc, char** argv) {
            sysconf(_SC_NPROCESSORS_ONLN));
 
     /* TODO: parse arguments with getopt */
+    char* T;
+    int E = 0;
+    int t = 0;
+    int c;
+
+    while((c = getopt (argc, argv, "E:T:")) != -1){
+    	switch (c)
+    	{
+    		case 'E':
+			E = atoi(optarg);
+			printf("E: %d\n",E);
+			break;
+		case 'T':
+			T = optarg;
+			printf("T: %s\n",T);
+			break;
+    	}
+
+    }
+	t = atoi(T);
+
+
+    if (E<0){
+    	printf("E value out of range");
+    	exit(0);
+    	}
+
+    int size = 10;
+
+    for(int i=1;i<=t;i++){
+    	size = size*10;
+}
 
     /* TODO: start datagen here as a child process. */
+pid_t datagen_id = fork();
+    char *datagen_file[]={"./datagen",NULL};
+
+
+    if(datagen_id == 0)
+    {
+    	printf("%s%d\n","PID for Datagen : ", getpid());
+    	execvp(datagen_file[0],datagen_file);
+
+    }
+    else if(datagen_id == -1)
+    {
+      printf("Datagen Error \n");
+	}
 
     /* Create the domain socket to talk to datagen. */
     struct sockaddr_un addr;
@@ -52,7 +162,7 @@ int main(int argc, char** argv) {
     }
 
     /* DEMO: request two sets of unsorted random numbers to datagen */
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < E; i++) {
         /* T value 3 hardcoded just for testing. */
         char *begin = "BEGIN U 3";
         int rc = strlen(begin);
