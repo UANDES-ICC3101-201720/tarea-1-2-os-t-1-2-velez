@@ -4,6 +4,7 @@ Emilio Vélez
 
 Informe:
 Problemas encontrados:
+-Falta de flags para compilar el datagen (solved).
 -De vez en cuando el programa genera error sin motivo aparente mas que errores de conexion al socket.
 
 Funcionalidad Pendiente:
