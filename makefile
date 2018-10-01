@@ -4,7 +4,7 @@ CFLAGS=-std=gnu11 -Wall -Werror -pthread
 all: quicksort datagen
 
 datagen: datagen.c 
-	$(CC) -o datagen datagen.c $(CFLAGS)
+	$(CC) -o datagen datagen.c $(CFLAGS) -lm
 
 quicksort: quicksort.c util.o
 	$(CC) -o quicksort quicksort.c util.o $(CFLAGS)  -lm -lpthread
