@@ -1,2 +1,10 @@
 Emilio Vélez
 (Funciona cuando quiere usando mismos parametros argv, ni idea por que...)
+
+
+Informe:
+Problemas encontrados:
+-De vez en cuando el programa genera error sin motivo aparente mas que errores de conexion al socket.
+
+Funcionalidad Pendiente:
+-Aplicar MUTEX.
